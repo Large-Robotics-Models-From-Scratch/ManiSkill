@@ -291,3 +291,18 @@ class TableSceneBuilder(SceneBuilder):
             self.env.agent.robot.set_pose(
                 sapien.Pose([-0.725, 0, 0], q=euler2quat(0, 0, np.pi / 2))
             )
+        elif self.env.robot_uids == "so101":
+            # Same arm pose as the agent's rest keyframe, with the gripper
+            # opened ready to grasp: every joint at a multiple of pi/2, the
+            # tool frame pointing straight down over the cube's spawn
+            # region. No base yaw is needed since the so101's zero pose
+            # already faces +x, unlike the so100.
+            qpos = np.array([0, 0, 0, np.pi / 2, 0, 1.0])
+            qpos = (
+                self.env._episode_rng.normal(
+                    0, self.robot_init_qpos_noise, (b, len(qpos))
+                )
+                + qpos
+            )
+            self.env.agent.reset(qpos)
+            self.env.agent.robot.set_pose(sapien.Pose([-0.725, 0, 0]))
