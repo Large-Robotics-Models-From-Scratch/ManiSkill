@@ -38,6 +38,15 @@ class SO101(BaseAgent):
     GRIPPER_CLOSED = -0.1745
     GRIPPER_OPEN = 1.7453
 
+    # Rotor inertia of the STS3215 servos, from TheRobotStudio's
+    # Simulation/SO101/joints_properties.xml. ManiSkill leaves armature at 0,
+    # which is fine for heavier arms, but the so101's links are light enough
+    # that a stiff position controller becomes numerically unstable without
+    # it: the arm chatters at ~1 rad/s, never satisfies is_robot_static, and
+    # cannot hold a placement. Adding the real rotor inertia settles it to
+    # ~0.11 rad/s.
+    ARMATURE = 0.028
+
     # Every arm joint sits at a multiple of pi/2 so the pose can be
     # reproduced on the real arm by eye -- the new_calib URDF is centred on
     # zero, which makes right angles physically meaningful here.
@@ -108,6 +117,16 @@ class SO101(BaseAgent):
         # rather than on either jaw.
         self.finger1_tip = self.robot.links_map["gripper_frame_link"]
         self.finger2_tip = self.robot.links_map["moving_jaw_tip"]
+        # Arm joints only. The gripper needs to stay responsive: giving it
+        # rotor inertia too makes it close so sluggishly that the jaws never
+        # secure the cube before the lift begins.
+        for articulation in self.robot._objs:
+            for joint in articulation.get_active_joints():
+                if joint.name.endswith("gripper"):
+                    continue
+                joint.armature = np.full(
+                    np.shape(joint.armature), self.ARMATURE, dtype=np.float32
+                )
 
     @property
     def tcp_pos(self):

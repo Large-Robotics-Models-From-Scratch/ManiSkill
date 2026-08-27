@@ -224,5 +224,22 @@ class PickCubeSO101Env(PickCubeEnv):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, robot_uids="so101", **kwargs)
 
+    @property
+    def _default_sensor_configs(self):
+        """Two 640x480 views, mirroring the SO-101 teleop datasets.
+
+        `lerobot/svla_so101_pickplace` records `up` and `side` streams at
+        640x480, so a policy trained on that data expects two views at that
+        resolution rather than the single 128x128 `base_camera` the other
+        PickCube variants use. The poses here are hand-placed to frame the
+        workspace; they are not calibrated against the real rig.
+        """
+        up = sapien_utils.look_at(eye=[-0.46, 0.13, 0.42], target=[-0.46, 0, 0.03])
+        side = sapien_utils.look_at(eye=[-0.28, 0.34, 0.20], target=[-0.47, 0, 0.04])
+        return [
+            CameraConfig("up", up, 640, 480, 1.0, 0.01, 100),
+            CameraConfig("side", side, 640, 480, 1.0, 0.01, 100),
+        ]
+
 
 PickCubeSO101Env.__doc__ = PICK_CUBE_DOC_STRING.format(robot_id="SO101")
