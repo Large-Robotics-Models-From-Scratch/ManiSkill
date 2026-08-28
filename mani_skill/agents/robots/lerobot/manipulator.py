@@ -41,7 +41,7 @@ class LeRobotRealAgent(BaseRealAgent):
         self._cached_qpos = None
         self._motor_keys: list[str] = None
 
-        if self.real_robot.name == "so100_follower":
+        if self.real_robot.name in ("so100_follower", "so101_follower"):
             self.real_robot.bus.motors["gripper"].norm_mode = MotorNormMode.DEGREES
 
     def start(self):
@@ -56,6 +56,8 @@ class LeRobotRealAgent(BaseRealAgent):
         qpos = torch.rad2deg(qpos)
         qpos = {f"{self._motor_keys[i]}.pos": qpos[i] for i in range(len(qpos))}
         # NOTE (stao): It seems the calibration from LeRobot has some offsets in some joints. We fix reading them here to match the expected behavior
+        # This offset is specific to the so100's calibration and has not been
+        # measured on so101 hardware, so it is deliberately not applied there.
         if self.real_robot.name == "so100_follower":
             qpos["elbow_flex.pos"] = qpos["elbow_flex.pos"] + 6.8
         self.real_robot.send_action(qpos)
