@@ -40,7 +40,8 @@ def get_dependencies():
         "trimesh",
         "imageio",
         "imageio[ffmpeg]",
-        "mplib==0.1.1;platform_system=='Linux'",
+        # mplib ships no cp313 wheel; only the motion-planning examples import it
+        "mplib==0.1.1;platform_system=='Linux' and python_version<'3.13'",
         "IPython",
         "pytorch_kinematics==0.7.6",
         "defusedxml",
